@@ -1,0 +1,874 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset=utf8>
+  <meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <style>
+    :root {
+      color-scheme: light;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px)
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font: 14px -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fff;
+      color: #000
+    }
+
+    img {
+      max-width: 100%
+    }
+
+    [hidden]:not([hidden=until-found i]) {
+      display: none !important
+    }
+  </style>
+</head>
+
+<body>
+  <title>Taquería para Dos</title>
+  <meta name="claude:viewport-fit-sides" content="cover">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Bungee&family=Work+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    /* Layout: a market-stall "game board" (stepper + stage) above the printed recipe card. Single deliberate look: cobalt night market. */
+    :root {
+      --bg: #13235c;
+      --panel: #1c3180;
+      --panel2: #24408f;
+      --ink: #fff6e5;
+      --muted: #b9c4ec;
+      --marigold: #ffb31f;
+      --rosa: #ff3d8b;
+      --verde: #2fbf71;
+      --line: #3a56aa;
+      --display: "Bungee", "Arial Black", system-ui, sans-serif;
+      --body: "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--body);
+      font-size: 16px;
+      line-height: 1.5;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+      padding-block: 0 48px
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px
+    }
+
+    /* papel picado */
+    .picado {
+      height: 44px;
+      margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+      background:
+        radial-gradient(circle at 50% 30%, var(--bg) 4px, transparent 5px) 0 0/28px 44px,
+        linear-gradient(135deg, transparent 75%, var(--bg) 75%) 0 34px/14px 10px,
+        linear-gradient(225deg, transparent 75%, var(--bg) 75%) 0 34px/14px 10px,
+        repeating-linear-gradient(90deg, var(--rosa) 0 112px, var(--marigold) 112px 224px, var(--verde) 224px 336px);
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      align-items: flex-end;
+      justify-content: space-between
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: clamp(28px, 6vw, 48px);
+      line-height: 1.05;
+      margin: 0;
+      text-wrap: balance
+    }
+
+    h1 span {
+      color: var(--marigold)
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 6px 0 0;
+      max-width: 60ch
+    }
+
+    .lang {
+      display: flex;
+      border: 2px solid var(--marigold);
+      border-radius: 999px;
+      overflow: hidden;
+      flex-shrink: 0
+    }
+
+    .lang button {
+      background: transparent;
+      color: var(--ink);
+      border: 0;
+      padding: 8px 16px;
+      font: 700 14px var(--body);
+      cursor: pointer;
+      letter-spacing: .05em
+    }
+
+    .lang button[aria-pressed="true"] {
+      background: var(--marigold);
+      color: var(--bg)
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--rosa);
+      outline-offset: 2px
+    }
+
+    .steps {
+      display: flex;
+      gap: 6px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      overflow-x: auto
+    }
+
+    .steps li {
+      flex: 1 0 auto;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      white-space: nowrap
+    }
+
+    .steps li b {
+      font-family: var(--display);
+      font-weight: 400;
+      margin-right: 6px
+    }
+
+    .steps li.on {
+      background: var(--marigold);
+      color: var(--bg)
+    }
+
+    .steps li.done {
+      color: var(--verde)
+    }
+
+    .stage {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 420px
+    }
+
+    .stage h2 {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: clamp(20px, 4vw, 28px);
+      margin: 0;
+      color: var(--marigold);
+      text-wrap: balance
+    }
+
+    .stage p {
+      margin: 0;
+      max-width: 65ch
+    }
+
+    .btn {
+      background: var(--rosa);
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font: 700 16px var(--body);
+      cursor: pointer;
+      align-self: flex-start;
+      transition: transform .1s
+    }
+
+    .btn:hover {
+      transform: translateY(-2px)
+    }
+
+    .btn:disabled {
+      background: var(--line);
+      color: var(--muted);
+      cursor: not-allowed;
+      transform: none
+    }
+
+    .btn.alt {
+      background: transparent;
+      border: 2px solid var(--muted);
+      color: var(--ink)
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px
+    }
+
+    .choice {
+      background: var(--panel2);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 16px;
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+      font: 500 15px var(--body);
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .choice .ic {
+      font-size: 34px;
+      line-height: 1
+    }
+
+    .choice strong {
+      font-size: 16px
+    }
+
+    .choice small {
+      color: var(--muted)
+    }
+
+    .choice:hover {
+      border-color: var(--marigold)
+    }
+
+    .choice.sel {
+      border-color: var(--verde);
+      background: #1d4b6b
+    }
+
+    .toast {
+      min-height: 24px;
+      font-weight: 600;
+      color: var(--marigold)
+    }
+
+    .toast.bad {
+      color: var(--rosa)
+    }
+
+    .toast.good {
+      color: var(--verde)
+    }
+
+    /* market */
+    .market {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 18px
+    }
+
+    .shelf {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+      min-width: 0
+    }
+
+    .item {
+      background: var(--panel2);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 12px 10px;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+      font: 500 14px var(--body)
+    }
+
+    .item .ic {
+      font-size: 40px;
+      line-height: 1.1
+    }
+
+    .item .qty {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .item .price {
+      font-weight: 700;
+      color: var(--marigold);
+      font-variant-numeric: tabular-nums
+    }
+
+    .item:hover {
+      border-color: var(--marigold)
+    }
+
+    .item.in {
+      border-color: var(--verde);
+      background: #1d4b6b
+    }
+
+    .cart {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-self: start
+    }
+
+    .cart h3 {
+      margin: 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted)
+    }
+
+    .cart ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 14px;
+      min-height: 40px
+    }
+
+    .cart li {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-variant-numeric: tabular-nums
+    }
+
+    .money {
+      display: flex;
+      justify-content: space-between;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      border-top: 1px dashed var(--line);
+      padding-top: 8px
+    }
+
+    .money.left span:last-child {
+      color: var(--verde)
+    }
+
+    .money.left.neg span:last-child {
+      color: var(--rosa)
+    }
+
+    .cart .btn {
+      align-self: stretch
+    }
+
+    /* kitchen */
+    .tasks {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 10px
+    }
+
+    .task {
+      position: relative;
+      overflow: hidden;
+      background: var(--panel2);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 14px;
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+      font: 500 14px var(--body);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start
+    }
+
+    .task .ic {
+      font-size: 28px;
+      line-height: 1
+    }
+
+    .task strong {
+      display: block;
+      font-size: 15px
+    }
+
+    .task small {
+      color: var(--muted)
+    }
+
+    .task:disabled {
+      opacity: .45;
+      cursor: not-allowed
+    }
+
+    .task.done {
+      border-color: var(--verde);
+      opacity: 1
+    }
+
+    .task.done::after {
+      content: "✓";
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      color: var(--verde);
+      font-weight: 700;
+      font-size: 18px
+    }
+
+    .task .bar {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 4px;
+      width: 0;
+      background: var(--marigold)
+    }
+
+    .task.run .bar {
+      transition: width 1.1s linear;
+      width: 100%
+    }
+
+    /* assemble */
+    .build {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: center
+    }
+
+    .plate {
+      position: relative;
+      width: min(280px, 100%);
+      aspect-ratio: 1;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: radial-gradient(circle, #e9eef9 60%, #c7d1ec 61%, #e9eef9 66%);
+      box-shadow: 0 10px 0 rgba(0, 0, 0, .2)
+    }
+
+    .layer {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(.3);
+      opacity: 0;
+      transition: transform .35s cubic-bezier(.3, 1.6, .5, 1), opacity .2s
+    }
+
+    .layer.on {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1
+    }
+
+    .l-tortilla {
+      width: 78%;
+      height: 78%;
+      background: radial-gradient(circle at 30% 40%, #c99a3e 2px, transparent 3px) 0 0/22px 22px, radial-gradient(circle at 70% 60%, #d2a24b 2px, transparent 3px) 0 0/30px 30px, #f2d28a
+    }
+
+    .l-carne {
+      width: 56%;
+      height: 50%;
+      border-radius: 45% 55% 50% 50%;
+      background: radial-gradient(circle, #7a3d1c 4px, transparent 5px) 0 0/16px 16px, radial-gradient(circle, #a65a2a 3px, transparent 4px) 8px 8px/16px 16px, #5c2d14
+    }
+
+    .l-guac {
+      width: 34%;
+      height: 30%;
+      background: radial-gradient(circle, #c8e07a 2px, transparent 3px) 0 0/10px 10px, #6aa83a
+    }
+
+    .l-pico {
+      width: 50%;
+      height: 44%;
+      background: radial-gradient(circle, #e8402f 4px, transparent 5px) 0 0/18px 18px, radial-gradient(circle, #fff 2px, transparent 3px) 9px 9px/18px 18px, radial-gradient(circle, #3f9b3a 1.5px, transparent 2.5px) 4px 12px/14px 14px;
+    }
+
+    .l-cebolla {
+      width: 58%;
+      height: 54%;
+      background: radial-gradient(circle, #b04d9a 2.5px, transparent 3.5px) 3px 5px/20px 20px, radial-gradient(circle, #e7c3e0 2px, transparent 3px) 13px 15px/20px 20px
+    }
+
+    .l-limon {
+      width: 22%;
+      height: 22%;
+      left: 84%;
+      top: 22%;
+      border-radius: 50% 50% 0 50%;
+      background: radial-gradient(circle at 100% 100%, #d9f27a 55%, #5aa02c 56%)
+    }
+
+    .pantry {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .pantry .item {
+      flex: 1 1 120px;
+      flex-direction: row;
+      justify-content: flex-start;
+      padding: 10px 12px
+    }
+
+    .pantry .item .ic {
+      font-size: 26px
+    }
+
+    .count {
+      font-family: var(--display);
+      font-size: 18px;
+      color: var(--ink)
+    }
+
+    .recipe-order {
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    /* end */
+    .fiesta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+      padding-block: 20px
+    }
+
+    .fiesta .big {
+      font-size: 72px;
+      line-height: 1
+    }
+
+    .fiesta p {
+      margin: 0 auto
+    }
+
+    /* written tutorial */
+    .card {
+      background: var(--ink);
+      color: #1a2350;
+      border-radius: 16px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px
+    }
+
+    .card h2 {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: clamp(20px, 4vw, 28px);
+      margin: 0;
+      color: #1a2350;
+      text-wrap: balance
+    }
+
+    .card .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #c4146a
+    }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 28px
+    }
+
+    .cols>* {
+      min-width: 0
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #c4146a
+    }
+
+    .card ul,
+    .card ol {
+      margin: 0;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .card ol li::marker {
+      font-weight: 700;
+      color: #c4146a
+    }
+
+    .card .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .card .meta span {
+      background: #1a2350;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 13px;
+      font-weight: 600
+    }
+
+    @media (max-width:720px) {
+
+      .market,
+      .build,
+      .cols {
+        grid-template-columns: 1fr
+      }
+
+      .stage {
+        padding: 18px
+      }
+
+      .card {
+        padding: 20px
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        transition: none !important
+      }
+    }
+  </style>
+
+  <div class="picado" aria-hidden="true"></div>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1 id="t-title">Taquería <span>para Dos</span></h1>
+        <p class="sub" id="t-sub"></p>
+      </div>
+      <div class="lang" role="group" aria-label="Idioma / Language">
+        <button id="lang-es" aria-pressed="true">ES</button>
+        <button id="lang-en" aria-pressed="false">EN</button>
+      </div>
+    </header>
+    <ol class="steps" id="steps"></ol>
+    <section class="stage" id="stage" aria-live="polite"></section>
+    <section class="card" id="card"></section>
+  </div>
+
+  <script>
+    const T = {
+      es: {
+        title: 'Taquería <span>para Dos</span>',
+        sub: 'Instructivo interactivo: ¿Cómo hacer una cena mexicana para 2 personas? Consigue compañía, compra, cocina y arma tus tacos.',
+        steps: ['Compañía', 'Dinero', 'Mercado', 'Cocina', 'Armar', '¡A comer!'],
+        s0h: 'Paso 1 · Consigue a la primera persona', s0p: 'Una cena para dos necesita dos personas. Tú eres la segunda. ¿Quién te acompaña? (Depende de tu nivel de soledad.)',
+        comp: [['🧑‍🤝‍🧑', 'Tu mejor amigo', 'Llega puntual y trae hambre.'], ['🏠', 'El vecino', 'Ya olía la carne desde el pasillo.'], ['🍽️', 'Alguien que no ha comido hoy', 'La cena más generosa del barrio.'], ['🪴', 'Tu planta', 'Escucha bien, come poco.']],
+        plant: 'La planta no come tacos. Elige a alguien con dientes.',
+        next: 'Siguiente',
+        s1h: 'Paso 2 · Consigue dinero (honesto, opcional)', s1p: 'Necesitas unos $100.000 COP para el mercado. Elige cómo los consigues.',
+        money: [['💼', 'Trabajar el turno', 'Dinero honesto. Recibes $100.000.'], ['🐷', 'Romper la alcancía', 'Monedas de años. Recibes $100.000.'], ['🎭', 'Asaltar un banco', 'Opcional, dijimos. Pero no esa opción.']],
+        bank: 'Mejor no. La cena no sabe igual desde la cárcel.',
+        got: 'Tienes $100.000 para el mercado.',
+        s2h: 'Paso 3 · Compra los ingredientes', s2p: 'Toca un producto para meterlo al carrito o sacarlo. Compra solo lo de la receta y no te pases del presupuesto.',
+        cart: 'Tu carrito', empty: 'Vacío', total: 'Total', left: 'Te queda', pay: 'Pagar y ir a cocinar',
+        missing: n => `Te falta${n > 1 ? 'n' : ''} ${n} ingrediente${n > 1 ? 's' : ''} de la receta.`, extra: x => `${x} no va en esta receta. Sácalo del carrito.`, over: 'Te pasaste del presupuesto.',
+        paid: '¡Pagado! A la cocina.',
+        s3h: 'Paso 4 · Cocina', s3p: 'Toca cada tarea para hacerla. Algunas se desbloquean cuando terminas la anterior.',
+        s3done: 'Todo listo. Ahora a armar los tacos.',
+        s4h: 'Paso 5 · Arma los tacos', s4p: 'Toca los ingredientes en el orden correcto para armar cada taco.',
+        order: 'Orden: tortilla → carne → guacamole → pico de gallo → cebolla → limón',
+        tacoN: (n, m) => `Taco ${n} de ${m}`, wrong: x => `Todavía no va ${x}. Revisa el orden.`, tacoOk: '¡Taco listo! Va al plato.',
+        s5h: '¡Buen provecho!', s5p: c => `Sirve 5 tacos por persona y comparte la mesa con ${c}. Acompaña con una limonada fría.`,
+        again: 'Jugar de nuevo',
+        items: { falda: 'Falda de res', aguacate: 'Aguacate Hass', tortilla: 'Tortillas de maíz', tomate: 'Tomate pintón', cebolla: 'Cebolla roja', limon: 'Limón Tahití', sal: 'Sal', pina: 'Piña', ketchup: 'Salsa de tomate', queso: 'Queso amarillo', gaseosa: 'Gaseosa 2 L' },
+        qty: { falda: '2 kg', aguacate: '4 und', tortilla: '10 und', tomate: '8 und', cebolla: '3 und', limon: '4 und', sal: '1 paquete', pina: '1 und', ketchup: '1 frasco', queso: '250 g', gaseosa: '1 und' },
+        tasks: [['salar', '🧂', 'Salar la carne', 'Sal por ambos lados, reposa 15 min'], ['asar', '🔥', 'Asar la carne', '6–8 min por lado, sartén muy caliente'], ['picarCarne', '🔪', 'Picar la carne', 'Reposa 5 min y corta en cubitos'], ['picarVeg', '🧅', 'Picar tomate y cebolla', '8 tomates y 3 cebollas en cubitos'], ['pico', '🍅', 'Hacer pico de gallo', '6 tomates, 2 cebollas, 2 limones, sal'], ['guac', '🥑', 'Hacer guacamole', '4 aguacates, 2 tomates, 1 limón, sal'], ['tortillas', '🫓', 'Calentar tortillas', '30 s por lado en sartén seco']],
+        layers: { tortilla: 'Tortilla', carne: 'Carne', guac: 'Guacamole', pico: 'Pico de gallo', cebolla: 'Cebolla', limon: 'Limón' },
+        card: {
+          eyebrow: 'Instructivo · Cocinar o preparar algo', h: '¿Cómo hacer una cena mexicana para 2 personas?', meta: ['2 personas', '10 tacos', '≈ 1 hora', '≈ $90.000 COP'], ingH: 'Ingredientes',
+          ing: ['2 kilos de falda de res', '4 aguacates, preferiblemente Hass', '10 tortillas de maíz (para tacos)', '8 tomates pintones', '3 cebollas rojas', '4 limones Tahití', 'Sal al gusto'],
+          stH: 'Paso a paso',
+          st: ['Consigue a la primera persona (puede ser un amigo, tu vecino o alguien que no haya comido hoy; depende de tu nivel de soledad). Para este caso práctico, tú serás la segunda persona.',
+            'Consigue algo de dinero para comprar los ingredientes, unos $100.000 COP. Dinero honesto (opcional, pero muy recomendado).',
+            'Compra los ingredientes de la lista.',
+            'Sala la falda por ambos lados y déjala reposar 15 minutos.',
+            'Asa la carne en un sartén muy caliente de 6 a 8 minutos por cada lado. Déjala reposar 5 minutos y pícala en cubitos.',
+            'Pico de gallo: pica en cubitos 6 tomates y 2 cebollas. Mézclalos con el jugo de 2 limones y sal.',
+            'Guacamole: machaca los 4 aguacates y mézclalos con 2 tomates picados, el jugo de 1 limón y sal.',
+            'Pica la última cebolla bien fina para servir encima y corta el último limón en cascos.',
+            'Calienta las tortillas en un sartén seco, 30 segundos por lado, y envuélvelas en un trapo limpio para que no se enfríen.',
+            'Arma cada taco en este orden: tortilla, carne, guacamole, pico de gallo, cebolla y un casco de limón.',
+            'Sirve 5 tacos por persona y disfruta la cena.']
+        }
+      },
+      en: {
+        title: 'Taco Night <span>for Two</span>',
+        sub: 'Interactive tutorial: How to make a Mexican dinner for 2 people. Find company, go shopping, cook and build your tacos.',
+        steps: ['Company', 'Money', 'Market', 'Kitchen', 'Build', 'Dinner!'],
+        s0h: 'Step 1 · Find the first person', s0p: 'A dinner for two needs two people. You are the second one. Who is joining you? (It depends on how lonely you are.)',
+        comp: [['🧑‍🤝‍🧑', 'Your best friend', 'Shows up on time and hungry.'], ['🏠', 'The neighbor', 'Could smell the steak from the hallway.'], ['🍽️', 'Someone who hasn\'t eaten today', 'The most generous dinner on the block.'], ['🪴', 'Your houseplant', 'Great listener, small appetite.']],
+        plant: 'Plants don\'t eat tacos. Pick someone with teeth.',
+        next: 'Next',
+        s1h: 'Step 2 · Get some money (honest, optional)', s1p: 'You need about $100,000 COP for the market. Choose how you get it.',
+        money: [['💼', 'Work your shift', 'Honest money. You get $100,000.'], ['🐷', 'Break the piggy bank', 'Years of coins. You get $100,000.'], ['🎭', 'Rob a bank', 'We said optional. Not that option.']],
+        bank: 'Better not. Dinner doesn\'t taste the same in jail.',
+        got: 'You have $100,000 for the market.',
+        s2h: 'Step 3 · Buy the ingredients', s2p: 'Tap a product to add it to your cart or take it out. Buy only what the recipe needs and stay on budget.',
+        cart: 'Your cart', empty: 'Empty', total: 'Total', left: 'Left', pay: 'Pay and start cooking',
+        missing: n => `You are missing ${n} recipe ingredient${n > 1 ? 's' : ''}.`, extra: x => `${x} doesn't belong in this recipe. Take it out of the cart.`, over: 'You went over budget.',
+        paid: 'Paid! Off to the kitchen.',
+        s3h: 'Step 4 · Cook', s3p: 'Tap each task to do it. Some unlock once you finish the one before.',
+        s3done: 'All set. Now let\'s build the tacos.',
+        s4h: 'Step 5 · Build the tacos', s4p: 'Tap the ingredients in the right order to build each taco.',
+        order: 'Order: tortilla → steak → guacamole → pico de gallo → onion → lime',
+        tacoN: (n, m) => `Taco ${n} of ${m}`, wrong: x => `${x} doesn't go on yet. Check the order.`, tacoOk: 'Taco done! Onto the plate.',
+        s5h: 'Enjoy your meal!', s5p: c => `Serve 5 tacos per person and share the table with ${c}. A cold lemonade goes great with it.`,
+        again: 'Play again',
+        items: { falda: 'Flank steak', aguacate: 'Hass avocado', tortilla: 'Corn tortillas', tomate: 'Half-ripe tomato', cebolla: 'Red onion', limon: 'Tahiti lime', sal: 'Salt', pina: 'Pineapple', ketchup: 'Ketchup', queso: 'American cheese', gaseosa: '2 L soda' },
+        qty: { falda: '2 kg', aguacate: '4 pcs', tortilla: '10 pcs', tomate: '8 pcs', cebolla: '3 pcs', limon: '4 pcs', sal: '1 pack', pina: '1 pc', ketchup: '1 bottle', queso: '250 g', gaseosa: '1 pc' },
+        tasks: [['salar', '🧂', 'Salt the steak', 'Salt both sides, rest 15 min'], ['asar', '🔥', 'Sear the steak', '6–8 min per side, very hot pan'], ['picarCarne', '🔪', 'Chop the steak', 'Rest 5 min, cut into small cubes'], ['picarVeg', '🧅', 'Dice tomato and onion', '8 tomatoes and 3 onions, diced'], ['pico', '🍅', 'Make pico de gallo', '6 tomatoes, 2 onions, 2 limes, salt'], ['guac', '🥑', 'Make guacamole', '4 avocados, 2 tomatoes, 1 lime, salt'], ['tortillas', '🫓', 'Warm the tortillas', '30 s per side in a dry pan']],
+        layers: { tortilla: 'Tortilla', carne: 'Steak', guac: 'Guacamole', pico: 'Pico de gallo', cebolla: 'Onion', limon: 'Lime' },
+        card: {
+          eyebrow: 'Tutorial · Cooking or preparing something', h: 'How to make a Mexican dinner for 2 people', meta: ['2 people', '10 tacos', '≈ 1 hour', '≈ $90,000 COP'], ingH: 'Ingredients',
+          ing: ['2 kilos of flank steak', '4 avocados, preferably Hass', '10 corn tortillas (taco size)', '8 half-ripe tomatoes', '3 red onions', '4 Tahiti limes', 'Salt to taste'],
+          stH: 'Step by step',
+          st: ['Find the first person (a friend, your neighbor, or someone who hasn\'t eaten today; it depends on how lonely you are). For this practical case, you will be the second person.',
+            'Get some money to buy the ingredients, about $100,000 COP. Honest money (optional, but highly recommended).',
+            'Buy the ingredients on the list.',
+            'Salt the flank steak on both sides and let it rest for 15 minutes.',
+            'Sear the steak in a very hot pan for 6 to 8 minutes per side. Let it rest for 5 minutes, then chop it into small cubes.',
+            'Pico de gallo: dice 6 tomatoes and 2 onions. Mix them with the juice of 2 limes and salt.',
+            'Guacamole: mash the 4 avocados and mix them with 2 diced tomatoes, the juice of 1 lime and salt.',
+            'Finely chop the last onion for topping and cut the last lime into wedges.',
+            'Warm the tortillas in a dry pan, 30 seconds per side, and wrap them in a clean kitchen towel to keep them warm.',
+            'Build each taco in this order: tortilla, steak, guacamole, pico de gallo, onion and a lime wedge.',
+            'Serve 5 tacos per person and enjoy your dinner.']
+        }
+      }
+    };
+    const ITEMS = [['falda', '🥩', 56000, 1], ['pina', '🍍', 7000, 0], ['aguacate', '🥑', 10000, 1], ['ketchup', '🥫', 8000, 0], ['tortilla', '🫓', 6000, 1], ['tomate', '🍅', 6000, 1], ['queso', '🧀', 9000, 0], ['cebolla', '🧅', 4000, 1], ['gaseosa', '🥤', 5000, 0], ['limon', '🍋', 2000, 1], ['sal', '🧂', 1500, 1]];
+    const NEED = { asar: ['salar'], picarCarne: ['asar'], pico: ['picarVeg'], guac: ['picarVeg'] };
+    const ORDER = ['tortilla', 'carne', 'guac', 'pico', 'cebolla', 'limon'];
+    const ICON = { tortilla: '🫓', carne: '🥩', guac: '🥑', pico: '🍅', cebolla: '🧅', limon: '🍋' };
+    const BUDGET = 100000, TACOS = 2;
+    let lang = 'es', S = { step: 0, comp: null, money: false, cart: new Set(), done: new Set(), taco: 0, layer: 0, msg: '', tone: '' };
+    try { const l = localStorage.getItem('taco-lang'); if (l === 'en' || l === 'es') lang = l } catch (e) { }
+    const $ = s => document.querySelector(s);
+    const fmt = n => '$' + n.toLocaleString(lang === 'es' ? 'es-CO' : 'en-US');
+    function say(m, t) { S.msg = m; S.tone = t || ''; }
+
+    function render() {
+      const L = T[lang];
+      document.documentElement.lang = lang;
+      $('#t-title').innerHTML = L.title; $('#t-sub').textContent = L.sub;
+      $('#lang-es').setAttribute('aria-pressed', lang === 'es'); $('#lang-en').setAttribute('aria-pressed', lang === 'en');
+      $('#steps').innerHTML = L.steps.map((s, i) => `<li class="${i === S.step ? 'on' : i < S.step ? 'done' : ''}"><b>${i + 1}</b>${s}</li>`).join('');
+      const st = $('#stage'); const toast = `<div class="toast ${S.tone}">${S.msg}</div>`;
+      if (S.step === 0) {
+        st.innerHTML = `<h2>${L.s0h}</h2><p>${L.s0p}</p><div class="choices">${L.comp.map((c, i) => `<button class="choice ${S.comp === i ? 'sel' : ''}" data-c="${i}"><span class="ic">${c[0]}</span><strong>${c[1]}</strong><small>${c[2]}</small></button>`).join('')}</div>${toast}<button class="btn" id="go" ${S.comp === null ? 'disabled' : ''}>${L.next}</button>`;
+        st.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { const i = +b.dataset.c; if (i === 3) { S.comp = null; say(L.plant, 'bad') } else { S.comp = i; say('') } render() });
+        $('#go').onclick = () => { S.step = 1; say(''); render() };
+      } else if (S.step === 1) {
+        st.innerHTML = `<h2>${L.s1h}</h2><p>${L.s1p}</p><div class="choices">${L.money.map((c, i) => `<button class="choice" data-m="${i}"><span class="ic">${c[0]}</span><strong>${c[1]}</strong><small>${c[2]}</small></button>`).join('')}</div>${toast}<button class="btn" id="go" ${S.money ? '' : 'disabled'}>${L.next}</button>`;
+        st.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { if (+b.dataset.m === 2) { say(L.bank, 'bad') } else { S.money = true; say(L.got, 'good') } render() });
+        $('#go').onclick = () => { S.step = 2; say(''); render() };
+      } else if (S.step === 2) {
+        const tot = [...S.cart].reduce((a, k) => a + ITEMS.find(x => x[0] === k)[2], 0), left = BUDGET - tot;
+        st.innerHTML = `<h2>${L.s2h}</h2><p>${L.s2p}</p><div class="market"><div class="shelf">${ITEMS.map(([k, ic, p]) => `<button class="item ${S.cart.has(k) ? 'in' : ''}" data-i="${k}" aria-pressed="${S.cart.has(k)}"><span class="ic">${ic}</span><span>${L.items[k]}</span><span class="qty">${L.qty[k]}</span><span class="price">${fmt(p)}</span></button>`).join('')}</div>
+    <aside class="cart"><h3>${L.cart}</h3><ul>${S.cart.size ? [...S.cart].map(k => `<li><span>${L.items[k]}</span><span>${fmt(ITEMS.find(x => x[0] === k)[2])}</span></li>`).join('') : `<li><span style="color:var(--muted)">${L.empty}</span></li>`}</ul>
+    <div class="money"><span>${L.total}</span><span>${fmt(tot)}</span></div><div class="money left ${left < 0 ? 'neg' : ''}"><span>${L.left}</span><span>${fmt(left)}</span></div>
+    <button class="btn" id="pay">${L.pay}</button></aside></div>${toast}`;
+        st.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const k = b.dataset.i; S.cart.has(k) ? S.cart.delete(k) : S.cart.add(k); say(''); render() });
+        $('#pay').onclick = () => {
+          const miss = ITEMS.filter(x => x[3] && !S.cart.has(x[0])).length, ex = ITEMS.find(x => !x[3] && S.cart.has(x[0]));
+          if (ex) say(L.extra(L.items[ex[0]]), 'bad'); else if (miss) say(L.missing(miss), 'bad'); else if (left < 0) say(L.over, 'bad'); else { S.step = 3; say(L.paid, 'good') }
+          render();
+        };
+      } else if (S.step === 3) {
+        const all = S.done.size === L.tasks.length;
+        st.innerHTML = `<h2>${L.s3h}</h2><p>${L.s3p}</p><div class="tasks">${L.tasks.map(([k, ic, n, d]) => { const ok = (NEED[k] || []).every(r => S.done.has(r)); return `<button class="task ${S.done.has(k) ? 'done' : ''}" data-t="${k}" ${(!ok && !S.done.has(k)) ? 'disabled' : ''}><span class="ic">${ic}</span><span><strong>${n}</strong><small>${d}</small></span><span class="bar"></span></button>` }).join('')}</div>${toast}<button class="btn" id="go" ${all ? '' : 'disabled'}>${L.next}</button>`;
+        st.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { const k = b.dataset.t; if (S.done.has(k) || b.classList.contains('run')) return; b.classList.add('run'); setTimeout(() => { S.done.add(k); if (S.done.size === L.tasks.length) say(L.s3done, 'good'); else say(''); render() }, 1150) });
+        $('#go').onclick = () => { S.step = 4; say(''); render() };
+      } else if (S.step === 4) {
+        st.innerHTML = `<h2>${L.s4h}</h2><p>${L.s4p}</p><div class="build"><div class="plate" aria-hidden="true">${ORDER.map((k, i) => `<div class="layer l-${k} ${i < S.layer ? 'on' : ''}"></div>`).join('')}</div>
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0"><span class="count">${L.tacoN(Math.min(S.taco + 1, TACOS), TACOS)}</span><span class="recipe-order">${L.order}</span>
+    <div class="pantry">${ORDER.map(k => `<button class="item" data-l="${k}"><span class="ic">${ICON[k]}</span><span>${L.layers[k]}</span></button>`).join('')}</div>${toast}</div></div>`;
+        st.querySelectorAll('[data-l]').forEach(b => b.onclick = () => {
+          if (S.layer >= ORDER.length) return;
+          const k = b.dataset.l;
+          if (k !== ORDER[S.layer]) { say(L.wrong(L.layers[k]), 'bad'); render(); return }
+          S.layer++; say('');
+          if (S.layer === ORDER.length) { say(L.tacoOk, 'good'); render(); setTimeout(() => { S.taco++; S.layer = 0; say(''); if (S.taco >= TACOS) S.step = 5; render() }, 1200); return }
+          render();
+        });
+      } else {
+        const who = L.comp[S.comp ?? 0][1].toLowerCase();
+        st.innerHTML = `<div class="fiesta"><div class="big">🌮🌮</div><h2>${L.s5h}</h2><p>${L.s5p(who)}</p><button class="btn" id="again" style="align-self:center">${L.again}</button></div>`;
+        $('#again').onclick = () => { S = { step: 0, comp: null, money: false, cart: new Set(), done: new Set(), taco: 0, layer: 0, msg: '', tone: '' }; render() };
+      }
+      const C = L.card;
+      $('#card').innerHTML = `<span class="eyebrow">${C.eyebrow}</span><h2>${C.h}</h2><div class="meta">${C.meta.map(m => `<span>${m}</span>`).join('')}</div>
+  <div class="cols"><div><h3>${C.ingH}</h3><ul>${C.ing.map(i => `<li>${i}</li>`).join('')}</ul></div><div><h3>${C.stH}</h3><ol>${C.st.map(i => `<li>${i}</li>`).join('')}</ol></div></div>`;
+    }
+    function setLang(l) { lang = l; try { localStorage.setItem('taco-lang', l) } catch (e) { } render() }
+    $('#lang-es').onclick = () => setLang('es'); $('#lang-en').onclick = () => setLang('en');
+    render();
+  </script>
+
+</body>
+
+</html>
